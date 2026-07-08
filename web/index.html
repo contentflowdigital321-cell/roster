@@ -1,0 +1,971 @@
+<title>Senior Care Center — Roster Planner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Roster Planner">
+<meta name="theme-color" content="#21262a">
+<style>
+  :root {
+    --bg: #f5f3ef;
+    --surface: #ffffff;
+    --surface-alt: #ece8e1;
+    --ink: #21262a;
+    --ink-soft: #5b6168;
+    --ink-faint: #8a8f94;
+    --border: #dad5cc;
+    --accent: #2f6f65;
+    --accent-ink: #ffffff;
+    --accent-soft: #e4efec;
+    --accent-soft-ink: #1f4f47;
+    --good: #3f8656;
+    --good-soft: #e4f1e6;
+    --good-ink: #285e37;
+    --warning: #b27515;
+    --warning-soft: #fbf0dd;
+    --warning-ink: #8a5810;
+    --critical: #b23b33;
+    --critical-soft: #fbe7e4;
+    --critical-ink: #8a2c26;
+    --grid-head-bg: #21262a;
+    --grid-head-ink: #f2efe9;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(33,38,42,0.06), 0 4px 16px rgba(33,38,42,0.06);
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14181a;
+      --surface: #1b2023;
+      --surface-alt: #20262a;
+      --ink: #ede9e2;
+      --ink-soft: #a2a9ac;
+      --ink-faint: #6b7276;
+      --border: #33393d;
+      --accent: #5aab9a;
+      --accent-ink: #0d211d;
+      --accent-soft: #1d2e2c;
+      --accent-soft-ink: #9bd4c5;
+      --good: #6fbe85;
+      --good-soft: #1c2a20;
+      --good-ink: #a3d9af;
+      --warning: #e0a83f;
+      --warning-soft: #2e2416;
+      --warning-ink: #f0c987;
+      --critical: #e17c74;
+      --critical-soft: #2e1d1b;
+      --critical-ink: #f0a49d;
+      --grid-head-bg: #0e1112;
+      --grid-head-ink: #f2efe9;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14181a; --surface: #1b2023; --surface-alt: #20262a;
+    --ink: #ede9e2; --ink-soft: #a2a9ac; --ink-faint: #6b7276; --border: #33393d;
+    --accent: #5aab9a; --accent-ink: #0d211d; --accent-soft: #1d2e2c; --accent-soft-ink: #9bd4c5;
+    --good: #6fbe85; --good-soft: #1c2a20; --good-ink: #a3d9af;
+    --warning: #e0a83f; --warning-soft: #2e2416; --warning-ink: #f0c987;
+    --critical: #e17c74; --critical-soft: #2e1d1b; --critical-ink: #f0a49d;
+    --grid-head-bg: #0e1112; --grid-head-ink: #f2efe9;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #f5f3ef; --surface: #ffffff; --surface-alt: #ece8e1;
+    --ink: #21262a; --ink-soft: #5b6168; --ink-faint: #8a8f94; --border: #dad5cc;
+    --accent: #2f6f65; --accent-ink: #ffffff; --accent-soft: #e4efec; --accent-soft-ink: #1f4f47;
+    --good: #3f8656; --good-soft: #e4f1e6; --good-ink: #285e37;
+    --warning: #b27515; --warning-soft: #fbf0dd; --warning-ink: #8a5810;
+    --critical: #b23b33; --critical-soft: #fbe7e4; --critical-ink: #8a2c26;
+    --grid-head-bg: #21262a; --grid-head-ink: #f2efe9;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--ink);
+    font: 15px/1.5 -apple-system, "Segoe UI", ui-sans-serif, system-ui, Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num, .grid-cell, .stat-value, .kbd {
+    font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  h1, h2, h3 { text-wrap: balance; margin: 0; }
+  button { font: inherit; }
+  ::selection { background: var(--accent-soft); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .app {
+    display: grid;
+    grid-template-columns: 232px 1fr;
+    grid-template-rows: 60px 1fr;
+    grid-template-areas: "brand topbar" "nav main";
+    height: 100vh;
+  }
+
+  .brand {
+    grid-area: brand;
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .brand-mark {
+    width: 26px; height: 26px; border-radius: 7px;
+    background: var(--accent); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; letter-spacing: -0.02em;
+    flex: none;
+  }
+  .brand-text { font-weight: 650; font-size: 14.5px; letter-spacing: -0.01em; }
+  .topbar-brand { display: none; } /* shown only on mobile, see media query - desktop uses .brand instead */
+
+  .topbar {
+    grid-area: topbar;
+    min-width: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .topbar-title { font-size: 13px; color: var(--ink-soft); }
+  .topbar-title strong { color: var(--ink); font-weight: 600; }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 650; letter-spacing: 0.01em;
+    border: 1px solid transparent;
+  }
+  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .status-pill.ok { background: var(--good-soft); color: var(--good-ink); }
+  .status-pill.ok .dot { background: var(--good); }
+  .status-pill.warning { background: var(--warning-soft); color: var(--warning-ink); }
+  .status-pill.warning .dot { background: var(--warning); }
+  .status-pill.error { background: var(--critical-soft); color: var(--critical-ink); }
+  .status-pill.error .dot { background: var(--critical); }
+  .status-pill.neutral { background: var(--surface-alt); color: var(--ink-soft); }
+  .status-pill.neutral .dot { background: var(--ink-faint); }
+
+  nav.sidenav {
+    grid-area: nav;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px 12px;
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    color: var(--ink-soft); font-size: 14px; font-weight: 500;
+    cursor: pointer; border: none; background: none; text-align: left; width: 100%;
+  }
+  .nav-item:hover { background: var(--surface-alt); color: var(--ink); }
+  .nav-item.active { background: var(--accent-soft); color: var(--accent-soft-ink); font-weight: 650; }
+  .nav-item .ic { width: 16px; text-align: center; flex: none; opacity: 0.85; }
+
+  /* Bottom tab bar - mobile only (see media query). Hidden on desktop. */
+  nav.bottom-nav {
+    display: none;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  nav.bottom-nav .bottom-nav-row { display: flex; }
+  .bottom-nav-item {
+    flex: 1 1 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-height: 58px; padding: 6px 4px;
+    color: var(--ink-faint); font-size: 11px; font-weight: 600;
+    cursor: pointer; border: none; background: none;
+  }
+  .bottom-nav-item .ic { font-size: 17px; line-height: 1; }
+  .bottom-nav-item.active { color: var(--accent); }
+
+  main {
+    grid-area: main;
+    min-width: 0; /* prevent intrinsic content width (e.g. wide tables) from blowing out the grid track */
+    overflow: auto;
+    padding: 28px 32px 60px;
+  }
+  .view { display: none; max-width: 1180px; }
+  .view.active { display: block; }
+  #globalBanner { max-width: 1180px; }
+  #globalBanner:empty { display: none; }
+
+  .view-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 4px; }
+  .view-head h1 { font-size: 21px; letter-spacing: -0.01em; }
+  .view-sub { color: var(--ink-soft); font-size: 13.5px; margin: 6px 0 22px; max-width: 62ch; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 8px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--ink); font-size: 13.5px; font-weight: 550;
+    cursor: pointer; transition: background 0.12s, border-color 0.12s;
+  }
+  .btn:hover { background: var(--surface-alt); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .btn-primary:hover { filter: brightness(1.06); }
+  .btn-ghost { border-color: transparent; }
+  .btn-ghost:hover { background: var(--surface-alt); }
+  .btn-danger-text { color: var(--critical); border-color: transparent; background: none; }
+  .btn-danger-text:hover { background: var(--critical-soft); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn svg { flex: none; }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+  }
+
+  .banner {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 13px 16px; border-radius: var(--radius);
+    border: 1px solid transparent; font-size: 13.5px; margin-bottom: 18px;
+  }
+  .banner.error { background: var(--critical-soft); color: var(--critical-ink); border-color: color-mix(in srgb, var(--critical) 30%, transparent); }
+  .banner.info { background: var(--accent-soft); color: var(--accent-soft-ink); border-color: color-mix(in srgb, var(--accent) 25%, transparent); }
+  .banner strong { font-weight: 650; }
+  .banner .close { margin-left: auto; background: none; border: none; cursor: pointer; color: inherit; opacity: 0.7; font-size: 15px; line-height: 1; }
+  .banner .close:hover { opacity: 1; }
+
+  /* ---- Staff Settings table ---- */
+  .table-scroll { overflow-x: auto; }
+  table.staff-table { width: 100%; min-width: 420px; border-collapse: collapse; }
+  table.staff-table th {
+    text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--ink-faint); font-weight: 650; padding: 10px 14px; border-bottom: 1px solid var(--border);
+  }
+  table.staff-table td { padding: 6px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  table.staff-table tr:last-child td { border-bottom: none; }
+  table.staff-table input[type="text"], table.staff-table select {
+    width: 100%; padding: 7px 9px; border-radius: 7px; border: 1px solid transparent;
+    background: transparent; color: var(--ink); font-size: 14px;
+  }
+  table.staff-table input[type="text"]:hover, table.staff-table select:hover { border-color: var(--border); }
+  table.staff-table input[type="text"]:focus, table.staff-table select:focus { border-color: var(--accent); background: var(--surface); }
+  .col-active { width: 84px; text-align: center; }
+  .col-remove { width: 44px; text-align: center; }
+  .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background 0.15s; cursor: pointer; }
+  .switch .track::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px; background: var(--surface); border-radius: 50%; transition: transform 0.15s; box-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+  .switch input:checked + .track { background: var(--good); }
+  .switch input:checked + .track::before { transform: translateX(14px); }
+  .icon-btn { background: none; border: none; color: var(--ink-faint); cursor: pointer; padding: 6px; border-radius: 6px; display: inline-flex; }
+  .icon-btn:hover { background: var(--critical-soft); color: var(--critical); }
+
+  .table-toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .table-toolbar-foot { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; align-items: center; padding: 12px 16px; }
+  .hint { font-size: 12.5px; color: var(--ink-faint); }
+
+  /* ---- Roster grid ---- */
+  .roster-scroll { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table.roster-grid { border-collapse: separate; border-spacing: 0; min-width: 100%; }
+  table.roster-grid th, table.roster-grid td { border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); white-space: nowrap; }
+  table.roster-grid th {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--grid-head-bg); color: var(--grid-head-ink);
+    font-size: 12px; font-weight: 650; padding: 10px 8px; text-align: center;
+  }
+  table.roster-grid th.name-col, table.roster-grid td.name-col { position: sticky; left: 0; z-index: 3; text-align: left; min-width: 168px; }
+  table.roster-grid th.role-col, table.roster-grid td.role-col { position: sticky; left: 168px; z-index: 3; text-align: left; min-width: 118px; }
+  table.roster-grid td.name-col, table.roster-grid td.role-col { background: var(--surface); font-weight: 600; }
+  table.roster-grid th.name-col, table.roster-grid th.role-col { z-index: 4; }
+  table.roster-grid td.grid-cell { text-align: center; font-size: 11.5px; padding: 9px 6px; min-width: 58px; color: var(--ink-soft); }
+  table.roster-grid td.grid-cell.work { background: var(--good-soft); color: var(--good-ink); }
+  table.roster-grid td.grid-cell.lunch { background: var(--warning-soft); color: var(--warning-ink); font-weight: 650; }
+  table.roster-grid td.grid-cell.editable { cursor: pointer; }
+  table.roster-grid td.grid-cell.editable:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+  table.roster-grid tbody tr:nth-child(even) td.name-col,
+  table.roster-grid tbody tr:nth-child(even) td.role-col { background: var(--surface-alt); }
+
+  .legend { display: flex; gap: 18px; align-items: center; margin: 12px 2px 0; font-size: 12.5px; color: var(--ink-soft); }
+  .legend .swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+
+  .empty-state { padding: 60px 24px; text-align: center; color: var(--ink-soft); }
+  .empty-state h3 { font-size: 15.5px; color: var(--ink); margin-bottom: 6px; }
+  .empty-state p { max-width: 48ch; margin: 0 auto 18px; font-size: 13.5px; }
+
+  /* ---- Dashboard ---- */
+  .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 20px 0 24px; }
+  .stat-tile { padding: 16px 16px 14px; }
+  .stat-tile .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint); font-weight: 650; }
+  .stat-value { font-size: 26px; font-weight: 650; margin-top: 6px; letter-spacing: -0.01em; }
+  .stat-tile.total { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 22%, var(--border)); }
+  .stat-tile.total .label { color: var(--accent-soft-ink); opacity: 0.8; }
+  .stat-tile.total .stat-value { color: var(--accent-soft-ink); }
+
+  .section-title { font-size: 13px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin: 26px 0 10px; }
+  .section-title:first-child { margin-top: 0; }
+
+  .warn-list { display: flex; flex-direction: column; gap: 8px; }
+  .warn-row { display: flex; gap: 10px; align-items: flex-start; padding: 11px 14px; border-radius: 8px; font-size: 13.5px; border: 1px solid transparent; }
+  .warn-row .tag { flex: none; font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 5px; margin-top: 1px; }
+  .warn-row.error { background: var(--critical-soft); color: var(--critical-ink); }
+  .warn-row.error .tag { background: var(--critical); color: var(--critical-soft); }
+  .warn-row.warning { background: var(--warning-soft); color: var(--warning-ink); }
+  .warn-row.warning .tag { background: var(--warning); color: var(--warning-soft); }
+  .warn-row.info { background: var(--surface-alt); color: var(--ink-soft); }
+  .warn-row.info .tag { background: var(--ink-faint); color: var(--surface); }
+  .warn-row.ok { background: var(--good-soft); color: var(--good-ink); }
+
+  table.coverage-table { width: 100%; border-collapse: collapse; }
+  table.coverage-table th, table.coverage-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  table.coverage-table th { text-align: center; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); }
+  table.coverage-table th:first-child, table.coverage-table td:first-child { text-align: left; }
+  table.coverage-table td { text-align: center; }
+  table.coverage-table tr:last-child td { border-bottom: none; }
+  .cov-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; border-radius: 6px; font-size: 12.5px; }
+  .cov-count.zero { color: var(--ink-faint); }
+  .cov-count.some { background: var(--warning-soft); color: var(--warning-ink); font-weight: 650; }
+  .cov-count.high { background: var(--critical-soft); color: var(--critical-ink); font-weight: 650; }
+
+  .meta-line { font-size: 12.5px; color: var(--ink-faint); margin-top: 14px; }
+
+  .stat-row { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+
+  @media (max-width: 880px) {
+    .app {
+      grid-template-columns: 1fr;
+      grid-template-rows: 56px 1fr;
+      grid-template-areas: "topbar" "main";
+    }
+    .brand { display: none; } /* folded into the topbar on mobile, see below */
+    nav.sidenav { display: none; }
+    nav.bottom-nav { display: block; }
+
+    .topbar { padding: 0 12px; gap: 10px; }
+    .topbar-title { display: none; } /* redundant with the active bottom-nav tab */
+    .topbar-actions { gap: 8px; }
+    .topbar-brand { display: flex; align-items: center; }
+
+    #btnGenerate .btn-label-full { display: none; }
+    #btnGenerate .btn-label-short { display: inline; }
+
+    main { padding: 16px 14px calc(72px + env(safe-area-inset-bottom, 0)); }
+
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+
+    /* Comfortable touch targets */
+    .btn { min-height: 40px; }
+    table.staff-table td { padding: 8px 10px; }
+    .icon-btn { padding: 10px; }
+    .switch { width: 40px; height: 26px; }
+    .switch .track::before { width: 20px; height: 20px; }
+    .switch input:checked + .track::before { transform: translateX(14px); }
+  }
+
+  @media (min-width: 881px) {
+    #btnGenerate .btn-label-short { display: none; }
+  }
+</style>
+
+<div class="app">
+  <div class="brand">
+    <div class="brand-mark">SC</div>
+    <div class="brand-text">Roster Planner</div>
+  </div>
+
+  <div class="topbar">
+    <div class="topbar-brand"><div class="brand-mark">SC</div></div>
+    <div class="topbar-title">Senior Care Center &nbsp;·&nbsp; <strong id="topbarView">Staff Settings</strong></div>
+    <div class="topbar-actions">
+      <span class="status-pill neutral" id="statusPill"><span class="dot"></span><span id="statusPillText">Not generated</span></span>
+      <button class="btn btn-primary" id="btnGenerate">
+        <span class="btn-label-full">Generate Optimal Roster</span>
+        <span class="btn-label-short">Generate</span>
+      </button>
+    </div>
+  </div>
+
+  <nav class="sidenav">
+    <button class="nav-item active" data-view="staff"><span class="ic">1</span> Staff Settings</button>
+    <button class="nav-item" data-view="roster"><span class="ic">2</span> Roster</button>
+    <button class="nav-item" data-view="dashboard"><span class="ic">3</span> Dashboard</button>
+  </nav>
+
+  <nav class="bottom-nav">
+    <div class="bottom-nav-row">
+      <button class="bottom-nav-item active" data-view="staff"><span class="ic">👥</span>Staff</button>
+      <button class="bottom-nav-item" data-view="roster"><span class="ic">🗓️</span>Roster</button>
+      <button class="bottom-nav-item" data-view="dashboard"><span class="ic">📊</span>Dashboard</button>
+    </div>
+  </nav>
+
+  <main>
+    <div id="globalBanner"></div>
+
+    <!-- STAFF SETTINGS -->
+    <section class="view active" id="view-staff">
+      <div class="view-head"><h1>Staff Settings</h1></div>
+      <p class="view-sub">Employee name, role, and active status. Only active employees are included the next time you generate a roster.</p>
+
+      <div class="card">
+        <div class="table-toolbar">
+          <div class="hint" id="staffCount">0 employees</div>
+          <button class="btn" id="btnAddStaff">+ Add employee</button>
+        </div>
+        <div class="table-scroll">
+          <table class="staff-table">
+            <thead>
+              <tr>
+                <th>Employee name</th>
+                <th style="width:170px">Role</th>
+                <th class="col-active">Active</th>
+                <th class="col-remove"></th>
+              </tr>
+            </thead>
+            <tbody id="staffRows"></tbody>
+          </table>
+        </div>
+        <div class="table-toolbar-foot">
+          <span class="hint">Changes save automatically.</span>
+          <button class="btn btn-danger-text" id="btnReset">Reset sample data</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROSTER -->
+    <section class="view" id="view-roster">
+      <div class="view-head"><h1>Roster</h1></div>
+      <p class="view-sub">07:00–16:00, 30-minute blocks. Click a cell in the 11:30–14:00 lunch window to override it manually — the Dashboard revalidates instantly.</p>
+      <div id="rosterContent"></div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section class="view" id="view-dashboard">
+      <div class="view-head"><h1>Dashboard</h1></div>
+      <p class="view-sub">Recomputed live from the current roster grid — including any manual edits.</p>
+      <div id="dashboardContent"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------------------------------------------------------------
+  // CONFIG — mirrors the Apps Script / VBA versions of this tool
+  // ---------------------------------------------------------------
+  const ROLES = ["Nurse", "Care Staff", "Kitchen", "Escort"];
+  const SHIFT_START = 7 * 60;
+  const SHIFT_END = 16 * 60;
+  const BLOCK = 30;
+  const LUNCH_DURATION = 60;
+
+  const LUNCH_SLOTS = [
+    { id: "11:30", start: 11 * 60 + 30 },
+    { id: "12:00", start: 12 * 60 },
+    { id: "12:30", start: 12 * 60 + 30 },
+    { id: "13:00", start: 13 * 60 },
+  ];
+  // Facility-wide rule: no two employees, of any role, may ever start lunch in the same
+  // slot. Each of the 4 slots is used by at most one person, so at most 4 employees total
+  // can be scheduled for lunch across the whole center.
+  const MAX_TOTAL_LUNCH_CAPACITY = LUNCH_SLOTS.length; // 4
+  const LUNCH_BLOCK_LABELS = ["11:30", "12:00", "12:30", "13:00", "13:30"];
+
+  const STORAGE_KEY = "senior_care_roster_v1";
+
+  class RosterError extends Error {}
+
+  function minutesToLabel(t) {
+    const h = Math.floor(t / 60), m = t % 60;
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+  }
+
+  function timeBlocks() {
+    const blocks = [];
+    for (let t = SHIFT_START; t < SHIFT_END; t += BLOCK) blocks.push(t);
+    return blocks;
+  }
+
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+
+  // ---------------------------------------------------------------
+  // STATE + PERSISTENCE
+  // ---------------------------------------------------------------
+  function sampleStaff() {
+    return [
+      { id: uid(), name: "Jane Smith", role: "Nurse", active: true },
+      { id: uid(), name: "Alex Chen", role: "Care Staff", active: true },
+      { id: uid(), name: "Maria Lopez", role: "Kitchen", active: true },
+    ];
+  }
+
+  let state = load();
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+    } catch (e) { /* fall through to seed */ }
+    return { staff: sampleStaff(), roster: null };
+  }
+
+  function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  // ---------------------------------------------------------------
+  // LUNCH ASSIGNMENT (ports assignAllLunches from Code.gs / RosterModule.bas)
+  // ---------------------------------------------------------------
+  function buildRoster() {
+    const active = state.staff.filter(s => s.active && ROLES.includes(s.role) && s.name.trim());
+    if (active.length === 0) {
+      return { error: "no-active" };
+    }
+
+    const n = active.length;
+    if (n > MAX_TOTAL_LUNCH_CAPACITY) {
+      throw new RosterError(
+        `There are ${n} active employees, but only ${MAX_TOTAL_LUNCH_CAPACITY} lunch slots exist and each slot may ` +
+        `be used by only one person — no two staff may start lunch at the same time. Reduce the active headcount to ` +
+        `${MAX_TOTAL_LUNCH_CAPACITY} or fewer, mark extra staff inactive, or add more lunch slots, then try again.`
+      );
+    }
+
+    // Sort by role priority then name so the solver's placement is deterministic and roles
+    // that matter most for coverage (Nurse first, per spec) are considered first when ties occur.
+    const sorted = active.slice().sort((a, b) => ROLES.indexOf(a.role) - ROLES.indexOf(b.role) || a.name.localeCompare(b.name));
+    const assignment = solveLunchSlots(sorted);
+
+    const employees = sorted.map((emp, i) => {
+      const slot = assignment[i];
+      const cells = {};
+      timeBlocks().forEach(t => {
+        const onLunch = t >= slot.start && t < slot.start + LUNCH_DURATION;
+        cells[t] = onLunch ? "LUNCH" : "WORK";
+      });
+      return { name: emp.name, role: emp.role, lunchSlot: slot.id, cells };
+    });
+
+    return { employees, generatedAt: new Date().toISOString() };
+  }
+
+  /**
+   * Finds the assignment of employees to distinct lunch slots that minimizes same-role
+   * adjacent-slot pairs. Adjacent slots (e.g. 12:00 and 12:30) overlap by 30 minutes, so if
+   * they're the only two people in that role, the role goes fully unstaffed for that half
+   * hour. The search space is tiny (at most 4 employees over 4 slots, <=24 permutations), so
+   * a small backtracking search finds the true optimum instead of relying on a fixed greedy
+   * fill order, which can miss a zero-violation arrangement that does exist (e.g. 2 Nurses +
+   * 2 Care Staff can always be split into two non-overlapping pairs, but a naive sequential
+   * fill can accidentally leave the second role with an adjacent, overlapping pair).
+   */
+  function solveLunchSlots(employees) {
+    const n = employees.length;
+    const used = new Array(LUNCH_SLOTS.length).fill(false);
+    const current = new Array(n);
+    let best = null;
+    let bestViolations = Infinity;
+
+    const isAdjacent = (a, b) => Math.abs(a - b) === 1;
+
+    function recurse(i, violations) {
+      if (violations >= bestViolations) return; // can't beat the best solution found so far
+      if (i === n) {
+        bestViolations = violations;
+        best = current.slice();
+        return;
+      }
+      for (let s = 0; s < LUNCH_SLOTS.length; s++) {
+        if (used[s]) continue;
+        let added = 0;
+        for (let j = 0; j < i; j++) {
+          if (employees[j].role === employees[i].role && isAdjacent(current[j], s)) added++;
+        }
+        used[s] = true;
+        current[i] = s;
+        recurse(i + 1, violations + added);
+        used[s] = false;
+        if (bestViolations === 0) return; // already optimal, stop searching
+      }
+    }
+
+    recurse(0, 0);
+    return best.map(slotIdx => LUNCH_SLOTS[slotIdx]);
+  }
+
+  // ---------------------------------------------------------------
+  // VALIDATION (ports ScanRosterForValidation)
+  // ---------------------------------------------------------------
+  function scanValidation(employees) {
+    const roleTotals = {};
+    const coverage = {};
+    ROLES.forEach(r => { roleTotals[r] = 0; coverage[r] = {}; LUNCH_BLOCK_LABELS.forEach(l => (coverage[r][l] = 0)); });
+
+    const labelToMinutes = {};
+    LUNCH_BLOCK_LABELS.forEach(label => {
+      const [h, m] = label.split(":").map(Number);
+      labelToMinutes[label] = h * 60 + m;
+    });
+
+    // label -> names of employees whose lunch appears to START in that slot (first LUNCH
+    // block encountered, chronologically), used for the "no two people start at once" rule.
+    const startedAt = {};
+    LUNCH_BLOCK_LABELS.forEach(l => (startedAt[l] = []));
+
+    employees.forEach(emp => {
+      if (!ROLES.includes(emp.role)) return;
+      roleTotals[emp.role]++;
+      let inferredStart = null;
+      LUNCH_BLOCK_LABELS.forEach(label => {
+        if (emp.cells[labelToMinutes[label]] === "LUNCH") {
+          coverage[emp.role][label]++;
+          if (inferredStart === null) inferredStart = label;
+        }
+      });
+      if (inferredStart !== null) startedAt[inferredStart].push(emp.name);
+    });
+
+    const warnings = [];
+
+    LUNCH_BLOCK_LABELS.forEach(label => {
+      if (startedAt[label].length > 1) {
+        warnings.push({
+          level: "ERROR",
+          text: `${startedAt[label].length} employees are all starting lunch at ${label} (${startedAt[label].join(", ")}) ` +
+                `— only one person may start lunch at a given time. Reassign one of them or regenerate the roster.`
+        });
+      }
+    });
+
+    ROLES.forEach(role => {
+      const total = roleTotals[role];
+      if (total === 0) return;
+      LUNCH_BLOCK_LABELS.forEach(label => {
+        const onLunch = coverage[role][label];
+        const working = total - onLunch;
+
+        if (working === 0) {
+          if (total >= 2) {
+            warnings.push({
+              level: "ERROR",
+              text: `Role "${role}" is completely unstaffed during the ${label} half-hour — minimum staffing floor ` +
+                    `violated. With ${total} employees in this role, the roster generator should never produce this ` +
+                    `on its own; the roster was likely edited manually — consider regenerating.`
+            });
+          } else {
+            warnings.push({ level: "INFO", text: `Role "${role}" has only one staff member, so it is unstaffed during their own lunch (${label}). This is expected for single-person roles.` });
+          }
+        }
+      });
+    });
+
+    const status = warnings.some(w => w.level === "ERROR") ? "ERROR"
+      : warnings.some(w => w.level === "WARNING") ? "WARNING" : "OK";
+
+    return { roleTotals, coverage, warnings, status };
+  }
+
+  // ---------------------------------------------------------------
+  // ACTIONS
+  // ---------------------------------------------------------------
+  function generateRoster() {
+    clearBanner();
+    try {
+      const result = buildRoster();
+      if (result.error === "no-active") {
+        showBanner("error", "No active employees", "No active employees were found in Staff Settings. Add staff and switch them on before generating a roster.");
+        return;
+      }
+      state.roster = { employees: result.employees, generatedAt: result.generatedAt };
+      persist();
+      showBanner("info", "Roster generated", `Generated for ${result.employees.length} active employee(s). See the Dashboard for coverage and warnings.`);
+      switchView("roster");
+      renderAll();
+    } catch (err) {
+      if (err instanceof RosterError) {
+        showBanner("error", "Cannot generate roster — constraint violation", err.message);
+      } else {
+        showBanner("error", "Unexpected error", err.message || String(err));
+      }
+    }
+  }
+
+  function toggleCell(empIndex, minute) {
+    const emp = state.roster.employees[empIndex];
+    emp.cells[minute] = emp.cells[minute] === "LUNCH" ? "WORK" : "LUNCH";
+    persist();
+    renderAll();
+  }
+
+  function resetSampleData() {
+    if (!confirm("Reset all staff and roster data back to the sample set? This cannot be undone.")) return;
+    state = { staff: sampleStaff(), roster: null };
+    persist();
+    clearBanner();
+    renderAll();
+  }
+
+  // ---------------------------------------------------------------
+  // RENDERING
+  // ---------------------------------------------------------------
+  const els = {
+    staffRows: document.getElementById("staffRows"),
+    staffCount: document.getElementById("staffCount"),
+    globalBanner: document.getElementById("globalBanner"),
+    rosterContent: document.getElementById("rosterContent"),
+    dashboardContent: document.getElementById("dashboardContent"),
+    statusPill: document.getElementById("statusPill"),
+    statusPillText: document.getElementById("statusPillText"),
+    topbarView: document.getElementById("topbarView"),
+    main: document.querySelector("main"),
+  };
+
+  function showBanner(kind, title, text) {
+    els.globalBanner.innerHTML = `
+      <div class="banner ${kind}">
+        <div><strong>${escapeHtml(title)}.</strong> ${escapeHtml(text)}</div>
+        <button class="close" aria-label="Dismiss">&times;</button>
+      </div>`;
+    els.globalBanner.querySelector(".close").addEventListener("click", clearBanner);
+  }
+  function clearBanner() { els.globalBanner.innerHTML = ""; }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  function renderStaff() {
+    updateStaffCount();
+    els.staffRows.innerHTML = state.staff.map((s, i) => `
+      <tr data-i="${i}">
+        <td><input type="text" value="${escapeHtml(s.name)}" data-field="name" placeholder="Employee name" /></td>
+        <td>
+          <select data-field="role">
+            ${ROLES.map(r => `<option value="${r}" ${r === s.role ? "selected" : ""}>${r}</option>`).join("")}
+          </select>
+        </td>
+        <td class="col-active">
+          <label class="switch">
+            <input type="checkbox" data-field="active" ${s.active ? "checked" : ""} />
+            <span class="track"></span>
+          </label>
+        </td>
+        <td class="col-remove">
+          <button class="icon-btn" data-action="remove" aria-label="Remove employee">✕</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function renderRoster() {
+    const roster = state.roster;
+    if (!roster || roster.employees.length === 0) {
+      els.rosterContent.innerHTML = `
+        <div class="card empty-state">
+          <h3>No roster generated yet</h3>
+          <p>Add active staff on the Staff Settings tab, then generate the roster to see the shift grid here.</p>
+          <button class="btn btn-primary" id="emptyGenerate">Generate Optimal Roster</button>
+        </div>`;
+      document.getElementById("emptyGenerate").addEventListener("click", generateRoster);
+      return;
+    }
+
+    const blocks = timeBlocks();
+    const lunchMinutes = new Set(LUNCH_BLOCK_LABELS.map(l => { const [h, m] = l.split(":").map(Number); return h * 60 + m; }));
+
+    const header = `<tr><th class="name-col">Employee name</th><th class="role-col">Role</th>${blocks.map(t => `<th>${minutesToLabel(t)}</th>`).join("")}</tr>`;
+    const rows = roster.employees.map((emp, i) => {
+      const cells = blocks.map(t => {
+        const val = emp.cells[t];
+        const editable = lunchMinutes.has(t);
+        const a11y = editable ? `tabindex="0" role="button" aria-pressed="${val === "LUNCH"}" aria-label="${escapeHtml(emp.name)} at ${minutesToLabel(t)}: ${val.toLowerCase()}, click to toggle"` : "";
+        return `<td class="grid-cell ${val === "LUNCH" ? "lunch" : "work"} ${editable ? "editable" : ""}" ${editable ? `data-emp="${i}" data-min="${t}" ${a11y}` : ""}>${val}</td>`;
+      }).join("");
+      return `<tr><td class="name-col">${escapeHtml(emp.name)}</td><td class="role-col">${emp.role}</td>${cells}</tr>`;
+    }).join("");
+
+    els.rosterContent.innerHTML = `
+      <div class="roster-scroll">
+        <table class="roster-grid">
+          <thead>${header}</thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--good-soft)"></span>Working</span>
+        <span><span class="swatch" style="background:var(--warning-soft)"></span>Lunch</span>
+        <span class="hint">Generated ${new Date(roster.generatedAt).toLocaleString()}</span>
+      </div>
+    `;
+
+    els.rosterContent.querySelectorAll("td[data-emp]").forEach(td => {
+      td.addEventListener("click", () => toggleCell(Number(td.dataset.emp), Number(td.dataset.min)));
+      td.addEventListener("keydown", e => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggleCell(Number(td.dataset.emp), Number(td.dataset.min));
+        }
+      });
+    });
+  }
+
+  function renderDashboard() {
+    const activeByRole = {};
+    ROLES.forEach(r => (activeByRole[r] = 0));
+    let totalActive = 0;
+    state.staff.forEach(s => { if (s.active && ROLES.includes(s.role)) { activeByRole[s.role]++; totalActive++; } });
+
+    const roster = state.roster;
+    const validation = roster ? scanValidation(roster.employees) : { warnings: [], status: "NONE", roleTotals: {}, coverage: {} };
+
+    const statusMeta = {
+      OK: { cls: "ok", label: "All clear" },
+      WARNING: { cls: "warning", label: "Warnings" },
+      ERROR: { cls: "error", label: "Needs attention" },
+      NONE: { cls: "neutral", label: "Not generated" },
+    }[validation.status];
+
+    updateStatusPill(validation.status);
+
+    const statTiles = `
+      <div class="stat-row">
+        ${ROLES.map(r => `
+          <div class="card stat-tile">
+            <div class="label">${r}</div>
+            <div class="stat-value">${activeByRole[r]}</div>
+          </div>`).join("")}
+        <div class="card stat-tile total">
+          <div class="label">Total active</div>
+          <div class="stat-value">${totalActive}</div>
+        </div>
+      </div>`;
+
+    const banner = `
+      <div class="warn-row ${statusMeta.cls === "neutral" ? "info" : statusMeta.cls}" style="margin-bottom:4px;">
+        <span class="tag">${statusMeta.label}</span>
+        <span>${roster ? `Roster last generated ${new Date(roster.generatedAt).toLocaleString()}.` : "Generate a roster to see coverage validation here."}</span>
+      </div>`;
+
+    let warningsHtml;
+    if (!roster) {
+      warningsHtml = "";
+    } else if (validation.warnings.length === 0) {
+      warningsHtml = `<div class="warn-row ok"><span>No issues detected — coverage looks good.</span></div>`;
+    } else {
+      warningsHtml = `<div class="warn-list">${validation.warnings.map(w => `
+        <div class="warn-row ${w.level.toLowerCase()}"><span class="tag">${w.level}</span><span>${escapeHtml(w.text)}</span></div>
+      `).join("")}</div>`;
+    }
+
+    let coverageHtml = "";
+    if (roster) {
+      const rolesWithStaff = ROLES.filter(r => validation.roleTotals[r] > 0);
+      coverageHtml = `
+        <div class="card" style="overflow:auto">
+          <table class="coverage-table">
+            <thead><tr><th>Role</th>${LUNCH_BLOCK_LABELS.map(l => `<th>${l}</th>`).join("")}</tr></thead>
+            <tbody>
+              ${rolesWithStaff.map(r => `
+                <tr>
+                  <td>${r}</td>
+                  ${LUNCH_BLOCK_LABELS.map(l => {
+                    const n = validation.coverage[r][l];
+                    const cls = n >= 3 ? "high" : n > 0 ? "some" : "zero";
+                    return `<td><span class="cov-count ${cls} num">${n}</span></td>`;
+                  }).join("")}
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    els.dashboardContent.innerHTML = `
+      <div class="section-title">Active staff by role</div>
+      ${statTiles}
+      <div class="section-title">Validation</div>
+      ${banner}
+      ${warningsHtml}
+      ${roster ? `<div class="section-title">Lunch-hour coverage <span class="hint">(headcount on lunch per 30-min block)</span></div>${coverageHtml}` : ""}
+    `;
+  }
+
+  function updateStatusPill(status) {
+    const meta = {
+      OK: { cls: "ok", text: "All clear" },
+      WARNING: { cls: "warning", text: "Warnings" },
+      ERROR: { cls: "error", text: "Needs attention" },
+      NONE: { cls: "neutral", text: "Not generated" },
+    }[status];
+    els.statusPill.className = "status-pill " + meta.cls;
+    els.statusPillText.textContent = meta.text;
+  }
+
+  function renderAll() {
+    renderStaff();
+    renderRoster();
+    renderDashboard();
+  }
+
+  // ---------------------------------------------------------------
+  // EVENTS
+  // ---------------------------------------------------------------
+  document.getElementById("btnGenerate").addEventListener("click", generateRoster);
+  document.getElementById("btnReset").addEventListener("click", resetSampleData);
+  document.getElementById("btnAddStaff").addEventListener("click", () => {
+    state.staff.push({ id: uid(), name: "", role: "Nurse", active: true });
+    persist();
+    renderStaff();
+    const inputs = els.staffRows.querySelectorAll("input[data-field='name']");
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  });
+
+  function updateStaffCount() {
+    els.staffCount.textContent = `${state.staff.length} employee${state.staff.length === 1 ? "" : "s"} · ${state.staff.filter(s => s.active).length} active`;
+  }
+
+  els.staffRows.addEventListener("input", e => {
+    const tr = e.target.closest("tr");
+    if (!tr) return;
+    const i = Number(tr.dataset.i);
+    const field = e.target.dataset.field;
+    if (!field) return;
+    state.staff[i][field] = field === "active" ? e.target.checked : e.target.value;
+    persist();
+    if (field === "active" || field === "role") {
+      updateStaffCount();
+      renderDashboard();
+    }
+  });
+
+  els.staffRows.addEventListener("click", e => {
+    const btn = e.target.closest("[data-action='remove']");
+    if (!btn) return;
+    const tr = btn.closest("tr");
+    const i = Number(tr.dataset.i);
+    state.staff.splice(i, 1);
+    persist();
+    renderStaff();
+    renderDashboard();
+  });
+
+  document.querySelectorAll(".nav-item[data-view], .bottom-nav-item[data-view]").forEach(btn => {
+    btn.addEventListener("click", () => switchView(btn.dataset.view));
+  });
+
+  function switchView(view) {
+    document.querySelectorAll(".nav-item[data-view], .bottom-nav-item[data-view]").forEach(b => b.classList.toggle("active", b.dataset.view === view));
+    document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + view));
+    const titles = { staff: "Staff Settings", roster: "Roster", dashboard: "Dashboard" };
+    els.topbarView.textContent = titles[view];
+    if (view === "dashboard") renderDashboard();
+    els.main.scrollTo(0, 0);
+  }
+
+  // ---------------------------------------------------------------
+  // INIT
+  // ---------------------------------------------------------------
+  renderAll();
+})();
+</script>
